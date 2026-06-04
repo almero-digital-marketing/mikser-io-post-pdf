@@ -99,18 +99,24 @@ export async function setup({ config, logger }) {
         }
     }
 
-    // Driver library: try `puppeteer` first (most common, bundles chrome),
-    // then `puppeteer-core` (same API without the chrome auto-download —
-    // the right choice when you've configured an external `executable`).
-    // Either is fine; either can drive any chrome binary you point at.
-    const puppeteer =
-        await import('puppeteer').then(m => m.default).catch(() => null)
-        ?? await import('puppeteer-core').then(m => m.default).catch(() => null)
+    // Driver library: prefer `puppeteer` (bundles chrome — works without
+    // an executablePath). Fall back to `puppeteer-core` (lean, no chrome
+    // download — requires an explicit executable). Track which one
+    // loaded so the no-executable case can fail early with a clear
+    // message instead of letting puppeteer-core surface its own
+    // "executablePath or channel must be specified" error.
+    let puppeteer = await import('puppeteer').then(m => m.default).catch(() => null)
+    let driver = puppeteer ? 'puppeteer' : null
+    if (!puppeteer) {
+        puppeteer = await import('puppeteer-core').then(m => m.default).catch(() => null)
+        if (puppeteer) driver = 'puppeteer-core'
+    }
 
     if (!puppeteer) {
-        // Context-aware install instructions. If the user already configured
-        // an executable, they almost certainly want puppeteer-core (lean,
-        // no chrome download). Otherwise either works.
+        // No driver at all. Context-aware install instructions: if the
+        // operator already configured an executable, puppeteer-core is
+        // the right install (lean, no chrome download). Otherwise either
+        // works.
         if (executablePath) {
             throw new Error(
                 `post-pdf needs the puppeteer driver library to talk to chrome at ${executablePath}.\n` +
@@ -126,6 +132,25 @@ export async function setup({ config, logger }) {
             '                npm install puppeteer-core      (no chrome download)\n' +
             '                # then in mikser.config.js:\n' +
             "                'post-pdf': { executable: '/usr/bin/google-chrome-stable' }"
+        )
+    }
+
+    // puppeteer-core can't find chrome on its own. If it's what loaded
+    // and no executable was resolved, fail here with a message naming
+    // the actual fix — install `puppeteer` for bundled chrome, OR set
+    // an `executable` path — instead of letting puppeteer-core surface
+    // its native "An `executablePath` or `channel` must be specified"
+    // error, which mentions puppeteer-core even when the operator never
+    // chose it explicitly.
+    if (driver === 'puppeteer-core' && !executablePath) {
+        throw new Error(
+            "post-pdf: only `puppeteer-core` is installed and no `executable` is configured.\n" +
+            "puppeteer-core does not bundle chrome — it needs an explicit binary to drive. Either:\n" +
+            "  - Install puppeteer alongside (downloads bundled chrome ~500MB):\n" +
+            "      npm install puppeteer\n" +
+            "  - Configure a chrome path in mikser.config.js:\n" +
+            "      'post-pdf': { executable: 'auto' }                            // probes /usr/bin/google-chrome-stable, etc.\n" +
+            "      'post-pdf': { executable: '/usr/bin/google-chrome-stable' }   // or an explicit path"
         )
     }
 
@@ -159,10 +184,13 @@ export async function setup({ config, logger }) {
         ...(executablePath ? { executablePath } : {}),
         args: [...new Set([...defaultArgs, ...(config?.launch?.args ?? [])])],
     })
+    // Mention which driver loaded and where chrome came from so the
+    // operator can tell at a glance whether they're on bundled or
+    // external chrome.
     if (executablePath) {
-        logger.debug('Puppeteer browser launched (executable: %s)', executablePath)
+        logger.debug('Puppeteer browser launched [%s] (executable: %s)', driver, executablePath)
     } else {
-        logger.debug('Puppeteer browser launched (bundled chrome)')
+        logger.debug('Puppeteer browser launched [%s] (bundled chrome)', driver)
     }
 }
 
