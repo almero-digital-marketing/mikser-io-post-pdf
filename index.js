@@ -129,12 +129,29 @@ export async function setup({ config, logger }) {
         )
     }
 
-    // --no-sandbox / --disable-setuid-sandbox are required on most
-    // headless Linux servers and Docker images where Chrome's sandbox
-    // can't be set up. Applied by default and merged (deduped) with any
-    // user-supplied launch.args so callers can add flags without losing
-    // these. To run WITH the sandbox, override launch.args explicitly.
-    const defaultArgs = ['--no-sandbox', '--disable-setuid-sandbox']
+    // Default chrome flags for headless server / Docker contexts:
+    //
+    //   --no-sandbox / --disable-setuid-sandbox
+    //       Most headless Linux servers and Docker images can't set up
+    //       Chrome's sandbox. To run WITH the sandbox, override
+    //       launch.args explicitly.
+    //
+    //   --disable-dev-shm-usage
+    //       Chrome uses /dev/shm for V8 / IPC shared memory. Docker
+    //       defaults /dev/shm to 64 MB; many VPS containers cap it at
+    //       a few hundred MB. When chrome runs out, it dies silently
+    //       during init — puppeteer waits and times out with
+    //       "Timed out after 30000 ms while waiting for the WS endpoint
+    //       URL to appear in stdout!" This flag tells chrome to use
+    //       /tmp (regular disk) for shared memory instead.
+    //
+    // All three are merged (deduped) with any user-supplied
+    // launch.args so callers can add flags without losing these.
+    const defaultArgs = [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+    ]
 
     browser = await puppeteer.launch({
         headless: true,
