@@ -1,0 +1,33 @@
+{
+  "name": "mikser-io-post-pdf",
+  "version": "1.0.0",
+  "description": "HTML → PDF postprocessor for mikser-io, driven by puppeteer or puppeteer-core",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --no-warnings --test --test-reporter=spec 'test/**/*.test.js'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/almero-digital-marketing/mikser-io-post-pdf.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/almero-digital-marketing/mikser-io-post-pdf/issues"
+  },
+  "homepage": "https://github.com/almero-digital-marketing/mikser-io-post-pdf#readme",
+  "peerDependencies": {
+    "mikser-io": "^7.0.0",
+    "puppeteer": "*",
+    "puppeteer-core": "*"
+  },
+  "peerDependenciesMeta": {
+    "puppeteer": {
+      "optional": true
+    },
+    "puppeteer-core": {
+      "optional": true
+    }
+  }
+}
