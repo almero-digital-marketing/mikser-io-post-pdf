@@ -1,7 +1,7 @@
 {
   "name": "mikser-io-post-pdf",
-  "version": "1.1.0",
-  "description": "HTML → PDF postprocessor for mikser-io, driven by puppeteer or puppeteer-core",
+  "version": "2.0.0",
+  "description": "HTML \u2192 PDF postprocessor for mikser-io, driven by puppeteer or puppeteer-core",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/almero-digital-marketing/mikser-io-post-pdf#readme",
   "peerDependencies": {
-    "mikser-io": "^8.0.0",
+    "mikser-io": "^9.0.0",
     "puppeteer": "*",
     "puppeteer-core": "*"
   },
