@@ -30,17 +30,21 @@ The plugin accepts either driver — install whichever fits.
 
 ```js
 // mikser.config.js
+import { documents, layouts, renderHbs } from 'mikser-io'
+import { postPdf } from 'mikser-io-post-pdf'
+
 export default {
     plugins: [
-        'documents', 'layouts', 'render-hbs',
-        'post-pdf',
+        documents(),
+        layouts(),
+        renderHbs(),
+        postPdf({
+            // 'auto' probes platform-typical chrome paths so the same
+            // config works on macOS dev and Linux prod. Or set an
+            // explicit path: '/usr/bin/google-chrome-stable'.
+            executable: 'auto',
+        }),
     ],
-    'post-pdf': {
-        // 'auto' probes platform-typical chrome paths so the same
-        // config works on macOS dev and Linux prod. Or set an
-        // explicit path: '/usr/bin/google-chrome-stable'.
-        executable: 'auto',
-    },
 }
 ```
 
@@ -66,10 +70,10 @@ Resolution precedence, in order. First match wins:
 
 If `'auto'` finds nothing, the plugin throws an actionable error listing every path it tried so you know what to install or where to put it. For non-standard installs (Homebrew chromium, `/opt/chrome/...`, etc.), set an explicit path — it always wins over `'auto'`.
 
-## `config` shape (all optional)
+## Options shape (all optional)
 
 ```js
-'post-pdf': {
+postPdf({
     // pick chrome (see above)
     executable: 'auto',
 
@@ -96,7 +100,7 @@ If `'auto'` finds nothing, the plugin throws an actionable error listing every p
     // when running with --watch, the browser is kept warm between
     // builds. Closed after this many idle ms (default: 60_000).
     teardownDelay: 60_000,
-}
+})
 ```
 
 ## Default chrome flags
