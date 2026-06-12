@@ -229,3 +229,17 @@ export async function teardown({ options, config, logger }) {
     }, delay)
     logger.debug('Puppeteer browser teardown scheduled in %dms', delay)
 }
+
+// v9 factory — descriptor stored in `runtime.postprocessors`. Workers
+// keep using the top-level `setup`/`postprocess`/`teardown` + `output`
+// exports above for dynamic-import dispatch. ADR-0010.
+export function postPdf(options = {}) {
+    return {
+        name: options.name ?? 'pdf',
+        options,
+        output,
+        setup,
+        postprocess,
+        teardown,
+    }
+}
