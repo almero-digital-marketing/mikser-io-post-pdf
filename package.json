@@ -1,6 +1,6 @@
 {
   "name": "mikser-io-post-pdf",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "HTML \u2192 PDF postprocessor for mikser-io, driven by puppeteer or puppeteer-core",
   "main": "index.js",
   "type": "module",

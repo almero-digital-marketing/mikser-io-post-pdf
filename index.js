@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { access } from 'node:fs/promises'
+import { access, mkdir } from 'node:fs/promises'
 
 // Declare the produced file extension so mikser-io can compute the
 // destination correctly. For pdf the name and the extension coincide,
@@ -196,6 +196,7 @@ export async function setup({ config, logger }) {
 
 export async function postprocess({ entity, options, config, logger }) {
     const sourcePath = path.join(options.outputFolder, entity.origin)
+    const outputPath = path.join(options.outputFolder, entity.destination)
 
     const page = await browser.newPage()
     try {
@@ -203,11 +204,18 @@ export async function postprocess({ entity, options, config, logger }) {
             waitUntil: 'networkidle0',
             ...config?.navigation
         })
-        return await page.pdf({
+        // File-path contract: write PDF directly to entity.destination
+        // via puppeteer's `path:` option (it streams to disk without a
+        // round-trip through a Buffer in JS). Return the path so the
+        // chain dispatcher threads it to the next stage's origin.
+        await access(path.dirname(outputPath)).catch(() => mkdir(path.dirname(outputPath), { recursive: true }))
+        await page.pdf({
             format: 'A4',
             printBackground: true,
-            ...config?.pdf
+            path: outputPath,
+            ...config?.pdf,
         })
+        return { success: true, result: entity.destination }
     } finally {
         await page.close()
     }
